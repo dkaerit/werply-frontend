@@ -1,0 +1,7 @@
+{
+  "extends": "@istanbuljs/nyc-config-typescript",
+  "all": true,
+  "extension": [".vue"],
+  "exclude": ["cypress/*", "coverage/*"],
+  "check-coverage": true
+}

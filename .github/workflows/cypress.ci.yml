@@ -1,0 +1,75 @@
+name: CI Cypress - Testing e2e
+on: ["push"]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout/Copy Repository
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install NestJS CLI
+        run: npm install -g @nestjs/cli
+
+      - name: Install Backend Dependencies
+        working-directory: backend
+        run: npm install
+
+      - name: Run Tests
+        working-directory: backend
+        env:
+          TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: npm run test
+          
+      - name: Start Backend Server
+        working-directory: backend
+        env:
+          TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: npm run start &
+
+  frontend:
+    needs: backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout/Copy Repository
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Cypress run
+        uses: cypress-io/github-action@v3
+        with:
+          working-directory: frontend
+          browser: chrome
+          start: npm run start
+          wait-on: "http://localhost:8080"
+
+      - name: Generar informes de cypress
+        working-directory: frontend
+        run: | 
+          npm run coverage:lcov || true
+          ls -al
+          echo ""
+          ls -al coverage
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          file: "frontend/coverage/lcov.info"

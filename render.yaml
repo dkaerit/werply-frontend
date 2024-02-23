@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: backend-nestjs
+    rootDir: backend
+    runtime: image
+    image: 
+      url: docker.io/library/node:20.11.1-bookworm-slim
+    buildCommand: npm install
+    startCommand: npm run start:dev
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+
+  - type: web
+    name: frontend-vuejs
+    rootDir: frontend
+    runtime: image
+    image: 
+      url: docker.io/library/node:20.11.1-bookworm-slim
+    buildCommand: npm install
+    startCommand: npm run build && npx http-server dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
